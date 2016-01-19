@@ -12,21 +12,24 @@
 #endif
 
 
-//The fields must appear in reverse order.
+//The fields must appear in reverse order. See Table 10 of the TMP102 datasheet
+// for the layout of Byte 1 and Byte 2 of the configuration register that
+// is getting stored in this struct.
 typedef struct {
   //LSB
-  byte reserved     : 4;
-  bool extended13   : 1;
-  bool alert        : 1;
-  bool conver_rate  : 2;
+  byte reserved     : 4; // 4 empty bits
+  bool extended13   : 1; // 0 or 1, 1 = extended (13bit) temperature mode
+  bool alert        : 1; // read only
+  bool conver_rate  : 2; // 2 bits, Conversion rate. 00 = 0.25Hz
+                         // 01 = 1Hz, 10 = 4Hz(default), 11 = 8Hz
   
   //MSB
-  bool shutdown_m   : 1;
-  bool thermostat   : 1;
-  bool al_polarity  : 1;
-  byte fault_queue  : 2;
-  byte resolution   : 2;
-  bool oneShot      : 1;
+  bool shutdown_m   : 1; // 1 bit, Shutdown mode, enabled when == 1
+  bool thermostat   : 1; // 1 bit, thermostat mode: comparator mode = 0, interrupt mode = 1.
+  bool al_polarity  : 1; // Alert pin polarity (0 default == active low, or 1 active high)
+  byte fault_queue  : 2; // 2 bits, number of times temp exceeds user defined limits, see Table 12 on datasheet.
+  byte resolution   : 2; // 2 bits, converter resolution, read only. 11 = default 12 bit mode.
+  bool oneShot      : 1; // 1 bit, regular mode == 0, one-shot mode == 1
 } Tmp102ConfFormat;
 
 
@@ -39,7 +42,7 @@ class tmp102 {
     ~tmp102();
     
     void init(byte address, bool loadconf = false);
-    bool readTemp(int &iRead); //The returned value must be divided by 16.
+    bool readTemp(int &iRead); // The value put into iRead can be multipled by 0.0625 to get temperature in degrees C.
     
     bool readConf();
     bool writeConf(Tmp102ConfFormat conf);

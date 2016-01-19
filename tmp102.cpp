@@ -171,30 +171,32 @@ bool tmp102::rawRead2(byte & data1, byte & data2)
   return false;
 }
 
-    
+// This function does the right-shifting neccessary to convert the tmp102
+// temperature register values to the correct integer value that can be
+// converted to degrees Celsius
 int tmp102::translateFromTmpFormat(int16_t tmp, bool ext13)
 {
   int iRead;
-  if(!ext13)
+  if(!ext13)  // For default 12-bit mode
 	{
-	  tmp >>= 4;
-    if(tmp & (1<<(12-1) ) )
+	  tmp >>= 4;  // Divide raw 16-bit value by 4 to right-shift 4 positions
+    if(tmp & (1<<(12-1) ) ) // If the left-most bit is 1, value is negative
     {
-      iRead = - ((int) (tmp ^ (1<<(12-1))) );
+      iRead = - ((int) (tmp ^ (1<<(12-1))) ); // convert to negative value
     } else {
-      iRead = tmp;
+      iRead = tmp; // otherwise, positive values are just equal to tmp
     }
-  } else {
-    tmp >>= 3;
-    if(tmp & (1<<(13-1) ) )
+  } else { // else if we are in 13-bit mode
+    tmp >>= 3; // Only right-shift 3 bits in 13-bit mode
+    if(tmp & (1<<(13-1) ) ) // check pos/neg bit
     {
-        iRead = - ((int) (tmp ^ (1<<(13-1))) );
+        iRead = - ((int) (tmp ^ (1<<(13-1))) ); // convert to negative value
     } else {
       iRead = tmp;
     }
   }
   
-  return iRead;
+  return iRead; // output is an integer still, multiply by 0.625 to get temperature
 }
 
 
